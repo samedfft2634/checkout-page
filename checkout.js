@@ -1,11 +1,15 @@
 //* CHECKOUT *//
 
-const SHIPPING_PRICE = 25.99
-const FREE_SHIPPING_LIMIT = 3000
-const TAX_RATE = 0.18
+//! CONSTANTS
+const SHIPPING_PRICE = 25.99;
+const FREE_SHIPPING_LIMIT = 3000;
+const TAX_RATE = 0.18;
+
+//! SELECTORS
 const deleteProducts = document.querySelector(".fa-trash-can");
 const products = document.querySelector(".products");
 
+//! EVENTS
 //? Delete Products button event
 deleteProducts.addEventListener("click", (e) => {
 	Swal.fire({
@@ -18,17 +22,19 @@ deleteProducts.addEventListener("click", (e) => {
 		confirmButtonText: "Yes, delete it!",
 	}).then((result) => {
 		if (result.isConfirmed) {
-			Swal.fire({
-				title: "Deleted!",
-				text: "Your product has been deleted.",
-				icon: "success",
-			});
-			products.textContent = "No product";
-			products.classList.add("no-product");
-			e.target.parentElement.style.display = "none";
+            Swal.fire({
+                title: "Deleted!",
+                text: "Your products has been deleted.",
+                icon: "success",
+            });
+			noProductCheck()
 		}
 	});
 });
+
+
+
+
 
 products.addEventListener("click", (e) => {
 	console.log(e.target);
@@ -38,13 +44,14 @@ products.addEventListener("click", (e) => {
 		//Traversing Dom for closest pick.
 		e.target.previousElementSibling.innerText++;
 		caluclateProductPrice(e.target);
-	} else if(e.target.classList.contains("fa-minus")){
-        e.target.nextElementSibling.innerText > 1 &&
-        e.target.nextElementSibling.innerText--;
+	} else if (e.target.classList.contains("fa-minus")) {
+		e.target.nextElementSibling.innerText > 1 &&
+			e.target.nextElementSibling.innerText--;
 		caluclateProductPrice(e.target);
-    } else if (e.target.classList.contains("fa-trash-can")){
-        e.target.closest(".product").remove()
-    }
+	} else if (e.target.classList.contains("fa-trash-can")) {
+		e.target.closest(".product").remove();
+        calculateTotalPrices()
+	}
 });
 
 const caluclateProductPrice = (btn) => {
@@ -57,18 +64,48 @@ const caluclateProductPrice = (btn) => {
 	const productPrice = btn
 		.closest(".buttons-div")
 		.querySelector("#product-price");
-        productPrice.textContent = discountedPrice * quantity;
-        calculateTotalPrices()
+	productPrice.textContent = (discountedPrice * quantity).toFixed(2)
+	calculateTotalPrices();
 };
 
 const calculateTotalPrices = () => {
-    const prices = document.querySelectorAll("#product-price")
-    console.log(prices)
+	const prices = document.querySelectorAll("#product-price");
 
-    //? Selected Products (Total Cost)
-    const subtotal =  [...prices].reduce((sum,price)=> sum + Number(price.textContent),0)
+	//? Selected Products (Total Cost)
+	const subtotal = [...prices].reduce(
+		(sum, price) => sum + Number(price.textContent),
+		0
+	);
 
-    //? write total cost on dom
-    document.getElementById("selected-price").textContent = subtotal.toFixed(2)
+	//? Shipping
+	const shippingPrice =
+		subtotal >= FREE_SHIPPING_LIMIT || subtotal === 0 ? 0 : SHIPPING_PRICE;
 
+    //? Tax
+    const taxPrice = subtotal * TAX_RATE
+
+    //? Total Cost
+    const totalPrice = subtotal + shippingPrice + taxPrice
+
+	//! write to DOM
+	document.getElementById("selected-price").textContent = subtotal.toFixed(2);
+
+    document.getElementById("shipping").textContent = shippingPrice.toFixed(2)
+
+    document.getElementById("tax").textContent = taxPrice.toFixed(2)
+
+    document.getElementById("total").textContent = totalPrice.toFixed(2)
+        !totalPrice && noProductCheck()
+};
+
+const noProductCheck = () =>{
+   
+    products.textContent = "No product";
+    products.classList.add("no-product");
+    document.querySelector(".delete-div").style.display = "none";
 }
+
+
+window.addEventListener("load",()=>{
+    calculateTotalPrices()
+})
